@@ -1,45 +1,61 @@
 <template>
   <m-page class="pool-detail-page">
     <div class="token">
-      <!-- {{poolDetail.isSingleToken?68:78}} -->
-      <token-avatar :token="token" :height="68" :width="68" />
-      <div class="name">{{ token.symbol }}</div>
+      <token-avatar
+        v-if="currentPool?.token"
+        :token="currentPool?.token"
+        :height="68"
+        :width="currentPool?.isLPToken ? 78 : 68"
+      />
+      <div class="name">{{ currentPool?.token?.symbol ?? '-' }}</div>
     </div>
     <div class="cells">
       <div class="cell">
         <div class="label">{{ t('APY') }}:</div>
-        <div class="value">XXXXXXXX</div>
+        <div class="value">{{ APYS[currentPool?.poolId] ? APYS[currentPool.poolId] : '-' }}%</div>
       </div>
       <div class="cell">
         <div class="label">{{ t('totalStaked') }}:</div>
-        <div class="value">XXXXXXXX</div>
+        <div class="value">{{ currentPool?.poolStakedAmount.toSignificant(9) ?? '-' }}</div>
       </div>
       <div class="cell">
         <div class="label">{{ t('staked') }}:</div>
-        <div class="value">XXXXXXXX</div>
+        <div class="value">{{ stakedAmount?.toSignificant(9) ?? '-' }}</div>
       </div>
       <div class="cell">
         <div class="label">{{ t('earned') }}:</div>
-        <div class="value">XXXXXXXX</div>
+        <div class="value">{{ earningsAmount?.toSignificant(9) ?? '-' }}</div>
       </div>
     </div>
     <div class="buttons">
-      <button v-if="isApproved">{{ t('stake') }}</button>
-      <button v-else :disabled="isApproving">
-        <loading v-if="isApproving" />
+      <button v-if="isApproved" :disabled="!isConnected" @click="showStakeModel = true">
+        {{ t('stake') }}
+      </button>
+      <button v-else :disabled="isApproving || isLoading || !isConnected" @click="onApprove">
+        <loading v-if="isApproving || isLoading" />
         <span>{{ t(isApproving ? 'approving' : 'approve') }}</span>
       </button>
-      <button>{{ t('unstake') }}</button>
-      <button>{{ t('harvestEarned') }}</button>
+      <button :disabled="!isApproved || !isConnected" @click="showUnStakeModel = true">
+        {{ t('unstake') }}
+      </button>
+      <button :disabled="!isApproved || !isConnected" @click="showEarningsModel = true">
+        {{ t('harvestEarned') }}
+      </button>
     </div>
   </m-page>
   <div class="models">
     <model v-model="showStakeModel" :title="t('stake')">
       <div class="stake-model">
-        <!-- {{poolDetail.isSingleToken?68:78}} -->
-        <token-avatar class="token-avatar" :token="token" :height="68" :width="68" />
+        <token-avatar
+          v-if="currentPool?.token"
+          class="token-avatar"
+          :token="currentPool?.token ?? {}"
+          :height="68"
+          :width="currentPool?.isLPToken ? 78 : 68"
+        />
         <div class="balance">
-          <span>{{ t('balance') }}</span> : <span>11</span>
+          <span>{{ t('balance') }}</span> :
+          <span>{{ stakeTokenBalance?.toSignificant(9) ?? '-' }}</span>
         </div>
         <div class="input-wrap">
           <numerical-input
@@ -48,20 +64,36 @@
             :modelValue="baseStakeAmount"
             @input="onStakeInput"
           />
-          <span class="token-name">USDT</span>
-          <span class="max">Max</span>
+          <span class="token-name">{{ currentPool?.token?.symbol ?? '-' }}</span>
+          <span class="max" @click="onStakeMax">Max</span>
         </div>
         <div class="buttons">
-          <button>{{ t('stake') }}</button>
+          <button :disabled="stakeButtonDisable" @click="onStake">
+            {{
+              t(
+                !stakeAmount
+                  ? 'pleaseInputStakeAmount'
+                  : isInsufficientBalance
+                  ? 'insufficientBalance'
+                  : 'stake'
+              )
+            }}
+          </button>
         </div>
       </div>
     </model>
     <model v-model="showUnStakeModel" :title="t('unstake')">
       <div class="unstake-model">
-        <!-- {{poolDetail.isSingleToken?68:78}} -->
-        <token-avatar class="token-avatar" :token="token" :height="68" :width="68" />
+        <token-avatar
+          v-if="currentPool?.token"
+          class="token-avatar"
+          :token="currentPool?.token ?? {}"
+          :height="68"
+          :width="currentPool?.isLPToken ? 78 : 68"
+        />
         <div class="staked">
-          <span>{{ t('staked') }}</span> : <span>11</span>
+          <span>{{ t('staked') }}</span> :
+          <span>{{ stakedAmount?.toSignificant(9) ?? '-' }}</span>
         </div>
         <div class="input-wrap">
           <numerical-input
@@ -70,21 +102,37 @@
             :modelValue="baseUnstakeAmount"
             @input="onUnstakeInput"
           />
-          <span class="token-name">USDT</span>
-          <span class="max">Max</span>
+          <span class="token-name">{{ currentPool?.token?.symbol ?? '-' }}</span>
+          <span class="max" @click="onUnstakeMax">Max</span>
         </div>
         <div class="buttons">
-          <button>{{ t('unstake') }}</button>
+          <button :disabled="unstakeButtonDisable" @click="onUnstake">
+            {{
+              t(
+                !unstakeAmount
+                  ? 'pleaseInputUnstakeAmount'
+                  : isUnstakeInsufficient
+                  ? 'unstakeAmountCannotGreaterThanStakeAmount'
+                  : 'unstake'
+              )
+            }}
+          </button>
         </div>
       </div>
     </model>
     <model v-model="showEarningsModel" :title="t('harvestEarned')">
       <div class="earnings-model">
-        <token-avatar class="token-avatar" :token="token" :height="68" :width="68" />
+        <token-avatar
+          class="token-avatar"
+          v-if="currentPool?.miningToken"
+          :token="currentPool?.miningToken"
+          :height="68"
+          :width="68"
+        />
         <div class="earnings">
-          <span>{{ t('earned') }}</span> : <span>11</span>
+          <span>{{ t('earned') }}</span> : <span>{{ earningsAmount?.toSignificant(9) }}</span>
         </div>
-        <div class="buttons">
+        <div class="buttons" @click="onHarvestEarned">
           <button>{{ t('harvestEarned') }}</button>
         </div>
       </div>
@@ -93,15 +141,28 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue'
+import { defineComponent, ref, computed, onMounted, watch } from 'vue'
 import MPage from '../../components/m-page/m-page.vue'
 import { useI18n } from 'vue-i18n'
-import { Token, TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
+import { useStore } from 'vuex'
+import { useRoute } from 'vue-router'
+import { PoolInfo, State } from '../../store/state-types'
+import { TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
 import TokenAvatar from '../../components/token-avatar/token-avatar.vue'
 import Loading from '../../components/loading/loading.vue'
 import Model from '../../components/model/model.vue'
 import NumericalInput from '../../components/numerical-input/numerical-input.vue'
-import { tryParseAmount } from '../../common/ts/utils'
+import { tryParseAmount, getContract } from '../../common/ts/utils'
+import getNotAccountWeb3 from '../../common/ts/getNotAccountWeb3'
+import getWeb3 from '../../common/ts/getWeb3'
+import { MASTER_CHEF_ADDRESS } from '../../common/ts/const'
+import { abi as MasterChefAbi } from '../../abi/MasterChef.json'
+import getApproved from '@/data/getApproved'
+import getBalance from '@/data/getBalance'
+import { getPoolInfo } from '../../data/getPoos'
+import approve from '@/common/ts/approve'
+import { Toast } from '@/components/toast'
+
 export default defineComponent({
   components: {
     TokenAvatar,
@@ -111,58 +172,258 @@ export default defineComponent({
     NumericalInput,
   },
   setup() {
-    const token = new Token(56, '0x55d398326f99059ff775485246999027b3197955', 18, 'hhh', 'test')
-
     const { t } = useI18n()
+    const store = useStore<State>()
+    const route = useRoute()
+
+    const account = computed(() => store.state.userInfo.account)
+    const APYS = computed(() => store.state.APYS)
+    const currentPool = computed(() => store.state.currentPool)
+    const isConnected = computed(() => store.getters.isConnected)
+
+    const isInsufficientBalance = computed(() => {
+      if (!stakeAmount.value || !stakeTokenBalance.value) {
+        return false
+      }
+      return stakeAmount.value.greaterThan(stakeTokenBalance.value)
+    })
+    const stakeButtonDisable = computed(() => {
+      if (!stakeAmount.value || !stakeTokenBalance.value || isInsufficientBalance.value) {
+        return true
+      }
+      return false
+    })
+    const isUnstakeInsufficient = computed(() => {
+      if (!unstakeAmount.value || !currentPool.value || !stakedAmount.value) {
+        return false
+      }
+      return unstakeAmount.value.greaterThan(stakedAmount.value)
+    })
+    const unstakeButtonDisable = computed(() => {
+      if (
+        !unstakeAmount.value ||
+        !currentPool.value ||
+        !stakedAmount.value ||
+        isUnstakeInsufficient.value
+      ) {
+        return true
+      }
+      return false
+    })
+
     const isApproved = ref(false)
-    const isApproving = ref(true)
+    const isApproving = ref(false)
+    const isLoading = ref(false)
+    const earningsAmount = ref<TokenAmount>()
+    const stakeTokenBalance = ref<TokenAmount>()
+    const stakedAmount = ref<TokenAmount>()
     const showStakeModel = ref(false)
     const showUnStakeModel = ref(false)
-    const showEarningsModel = ref(true)
+    const showEarningsModel = ref(false)
 
     const baseStakeAmount = ref<string>()
     const stakeAmount = computed({
       get() {
-        return tryParseAmount(baseStakeAmount.value, token)
+        if (!currentPool.value) {
+          return undefined
+        }
+        return tryParseAmount(baseStakeAmount.value, currentPool.value.token)
       },
       set(v: TokenAmount | undefined) {
         baseStakeAmount.value = v?.toExact() ?? ''
       },
     })
-    const onStakeInput = (v: string) => {
-      baseStakeAmount.value = v
-    }
 
     const baseUnstakeAmount = ref<string>()
     const unstakeAmount = computed({
       get() {
-        return tryParseAmount(baseUnstakeAmount.value, token)
+        if (!currentPool.value) {
+          return undefined
+        }
+        return tryParseAmount(baseUnstakeAmount.value, currentPool.value.token)
       },
       set(v: TokenAmount | undefined) {
         baseUnstakeAmount.value = v?.toExact() ?? ''
       },
     })
+
+    const _getStakeTokenBalance = async (pool: PoolInfo, account: string) => {
+      stakeTokenBalance.value = await getBalance(pool.token, account)
+    }
+    const _getApproved = async (pool: PoolInfo, account: string) => {
+      isApproved.value = await getApproved(pool.token, MASTER_CHEF_ADDRESS, account)
+    }
+    const _getStakedAmount = async (pool: PoolInfo, account: string) => {
+      const web3 = getNotAccountWeb3()
+      const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
+      const userInfo = await contract.methods.userInfo(pool.poolId, account).call()
+      stakedAmount.value = new TokenAmount(pool.token, userInfo.amount)
+    }
+    const _getEarningsAmount = async (pool: PoolInfo, account: string) => {
+      const web3 = getNotAccountWeb3()
+      const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
+      const earnings = (await contract.methods.pendingSushi(pool.poolId, account).call()) as string
+      earningsAmount.value = new TokenAmount(pool.miningToken, earnings)
+    }
+    const _getUserInfo = async (pool: PoolInfo, account: string) => {
+      isLoading.value = true
+      await Promise.all([
+        _getEarningsAmount(pool, account),
+        _getApproved(pool, account),
+        _getStakeTokenBalance(pool, account),
+        _getStakedAmount(pool, account),
+      ])
+      isLoading.value = false
+    }
+
+    const onApprove = async () => {
+      if (!account.value || !currentPool.value) {
+        return
+      }
+      isApproving.value = true
+      const hasApproved = await approve(currentPool.value.token, MASTER_CHEF_ADDRESS, account.value)
+      isApproving.value = false
+      isApproved.value = hasApproved
+      Toast[hasApproved ? 'success' : 'info'](t(hasApproved ? 'approveSuccess' : 'approveFailed'))
+    }
+    const onStake = async () => {
+      const web3 = getWeb3()
+      if (!web3 || !account.value || !currentPool.value || !stakeAmount.value) {
+        return
+      }
+      Toast.loading('loading...')
+      const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
+      try {
+        const deposit = contract.methods.deposit(
+          currentPool.value.poolId,
+          stakeAmount.value.raw.toString()
+        )
+        await deposit.send({ from: account.value })
+        Toast.clear()
+        Toast.success(t('stakeSuccess'))
+        stakeAmount.value = undefined
+        _getUserInfo(currentPool.value, account.value)
+        store.dispatch('updatePool', currentPool.value.poolId)
+      } catch (error) {
+        Toast.clear()
+        if (error?.code !== 4001) {
+          console.log(error)
+          Toast.info(t('stakeFailed'))
+        }
+      }
+    }
+    const onUnstake = async () => {
+      const web3 = getWeb3()
+      if (!web3 || !account.value || !currentPool?.value || !unstakeAmount.value) {
+        return
+      }
+
+      Toast.loading('loading...')
+      const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
+      try {
+        const withdraw = contract.methods.withdraw(
+          currentPool.value.poolId,
+          unstakeAmount.value.raw.toString()
+        )
+        await withdraw.send({ from: account.value })
+        Toast.clear()
+        Toast.success(t('unstakeSuccess'))
+        _getUserInfo(currentPool.value, account.value)
+        store.dispatch('updatePool', currentPool.value.poolId)
+        unstakeAmount.value = undefined
+      } catch (error) {
+        Toast.clear()
+        if (error?.code !== 4001) {
+          console.log(error)
+          Toast.info(t('unstakeFailed'))
+        }
+      }
+    }
+    const onHarvestEarned = async () => {
+      const web3 = getWeb3()
+      if (!web3 || !account.value || !currentPool?.value) {
+        return
+      }
+      Toast.loading('loading...')
+      const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
+      try {
+        const withdraw = contract.methods.withdraw(currentPool.value.poolId, 0)
+        await withdraw.send({ from: account.value })
+        Toast.clear()
+        Toast.success(t('harvestEarnedSuccess'))
+        _getUserInfo(currentPool.value, account.value)
+      } catch (error) {
+        Toast.clear()
+        if (error?.code !== 4001) {
+          Toast.info(t('harvestEarnedFailed'))
+          console.log(error)
+        }
+      }
+    }
+    const onStakeMax = () => {
+      stakeAmount.value = stakeTokenBalance.value
+    }
+    const onUnstakeMax = () => {
+      unstakeAmount.value = stakedAmount.value
+    }
     const onUnstakeInput = (v: string) => {
       baseUnstakeAmount.value = v
     }
+    const onStakeInput = (v: string) => {
+      baseStakeAmount.value = v
+    }
+
+    onMounted(async () => {
+      const { query } = route
+      if (!currentPool.value && query.poolId) {
+        const pool = await getPoolInfo(Number(query.poolId))
+        store.dispatch('setCurrentPool', pool)
+      }
+      if (account.value && currentPool.value) {
+        _getUserInfo(currentPool.value, account.value)
+      }
+    })
+    watch([account], async () => {
+      if (!account.value || !currentPool.value) {
+        return
+      }
+      _getUserInfo(currentPool.value, account.value)
+      store.dispatch('updatePool', currentPool.value.poolId)
+    })
 
     return {
+      APYS,
+      currentPool,
+
+      isConnected,
       isApproved,
       isApproving,
-
+      isLoading,
+      earningsAmount,
+      stakeTokenBalance,
+      stakedAmount,
+      stakeAmount,
+      unstakeAmount,
       baseStakeAmount,
       baseUnstakeAmount,
+      stakeButtonDisable,
+      unstakeButtonDisable,
+      isUnstakeInsufficient,
+      isInsufficientBalance,
 
       showStakeModel,
       showUnStakeModel,
       showEarningsModel,
 
-      token,
-
       t,
-
       onStakeInput,
       onUnstakeInput,
+      onApprove,
+      onStake,
+      onUnstake,
+      onHarvestEarned,
+      onStakeMax,
+      onUnstakeMax,
     }
   },
 })
@@ -219,12 +480,10 @@ export default defineComponent({
         cursor: not-allowed;
         box-shadow: 2px -2px 10px rgba(10, 20, 48, 0.51);
       }
-      .loading {
-        img {
-          height: 15px;
-          width: 15px;
-          margin-right: 5px;
-        }
+      img {
+        height: 12px;
+        width: 12px;
+        margin: 0 3px 0 0;
       }
     }
   }
@@ -334,6 +593,10 @@ export default defineComponent({
         border: 0;
         outline: none;
         cursor: pointer;
+        &:disabled {
+          cursor: not-allowed;
+          box-shadow: 2px -2px 10px rgba(10, 20, 48, 0.51);
+        }
       }
     }
   }

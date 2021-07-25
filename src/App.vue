@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { State } from './store/state-types'
 
@@ -11,14 +11,29 @@ export default defineComponent({
   name: 'App',
   setup() {
     const store = useStore<State>()
+    const isConnected = computed<boolean>(() => store.getters.isConnected)
+    const pools = computed(() => store.state.pools)
+    const isLoadingPools = computed(() => store.state.isLoadingPools)
 
-    // store.dispatch('getCrowdfundings')
+    store.dispatch('getPools')
 
     if (window.ethereum && window.ethereum.on) {
       window.ethereum.on('accountsChanged', ([address]: string[]) => {
         store.dispatch('handleAccountChange', address)
       })
     }
+
+    if (window.ethereum && window.ethereum.on) {
+      window.ethereum.on('accountsChanged', ([address]: string[]) => {
+        store.dispatch('handleAccountChange', address)
+      })
+    }
+
+    watch([isConnected, isLoadingPools], ([isConnected, isLoadingPools]) => {
+      if (isConnected && !isLoadingPools) {
+        store.dispatch('updatePools')
+      }
+    })
   },
 })
 </script>

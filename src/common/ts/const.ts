@@ -1,3 +1,4 @@
+import { Token, ChainId } from '@cointribute/pancakeswap-sdk-v2'
 import JSBI from 'jsbi'
 
 export const CHAIN_ID = process.env.VUE_APP_CHAIN_ID
@@ -6,14 +7,13 @@ export const CHAIN_ID_LIST = [CHAIN_ID]
 
 export const BSCSCAN_PRC_URL = process.env.VUE_APP_BSCSCAN_PRC_URL
 
-export const CROWDFUND_FACTORY_ADDRESS = '0x2a4977f7324d41aadC0134A48c95707A474e3A9B'
+export const MASTER_CHEF_ADDRESS = '0x7910cce8C7918b6AFe57080b75c500EA9Cc5277C'
 
-export const PLEDGE_DIVIDEND_POOLS_ADDRESS = '0xe1A24d57ba0E2623babFfCf410518c446eBBF79a'
-
-export const PLEDGE_DIVIDEND_POOLS_ADDRESS_V2 = '0xF865b4B50C293E27A3A096c9aA448aB0E05Cb24F'
-
-export const HIP_ADDRESS = '0xe6ffa2e574a8bbeb5243d2109b6b11d4a459f88b'
-
-export const HIPS_ADDRESS = '0xAeA65F55CE58e74ec4DEEF1C2Bd9aB0E91238b98'
+export const MINING_TOKEN = new Token(
+  ChainId.MAINNET,
+  '0x46446469f099817c19769878dcc89a812e187446',
+  18,
+  'THOR'
+)
 
 export const ZERO = JSBI.BigInt('0')

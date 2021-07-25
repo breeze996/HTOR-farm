@@ -34,27 +34,30 @@
       <span>{{ t('singleTokenMining') }}</span>
     </div>
     <div class="pools">
-      <div class="pool" v-for="(item, index) in pools" :key="index">
+      <div class="pool" v-for="(pool, index) in singleTokenPools" :key="index">
         <div class="token">
-          <div class="name">{{ token.symbol }}</div>
-          <!-- {{item.isSingleToken?55:65}} -->
-          <token-avatar :token="token" :height="55" :width="55"></token-avatar>
+          <div class="name">{{ pool.token.symbol }}</div>
+          <token-avatar :token="pool.token" :height="55" :width="55" />
         </div>
         <div class="cells">
           <div class="cell">
             <div class="label">{{ t('APY') }}:</div>
-            <div class="value">XXXXXXXX</div>
+            <div class="value">{{ APYS[pool.poolId] ?? '-' }}%</div>
           </div>
           <div class="cell">
             <div class="label">{{ t('totalStaked') }}:</div>
-            <div class="value">XXXXXXXX</div>
+            <div class="value">{{ pool.poolStakedAmount.toSignificant(8) }}</div>
           </div>
           <div class="cell">
             <div class="label">{{ t('staked') }}:</div>
-            <div class="value">XXXXXXXX</div>
+            <div class="value">{{ pool.stakedAmount?.toSignificant(8) ?? '-' }}</div>
           </div>
         </div>
-        <button class="button" @click="toPoolDetail(item?.poolId)">{{ t('viewDetail') }}</button>
+        <button class="button" @click="toPoolDetail(pool)">{{ t('viewDetail') }}</button>
+      </div>
+      <div class="loading" v-if="isLoadingPools">
+        <loading />
+        <span>Loading...</span>
       </div>
     </div>
     <div class="bar">
@@ -62,61 +65,77 @@
       <span>{{ t('LPTokenMining') }}</span>
     </div>
     <div class="pools">
-      <div class="pool" v-for="(item, i) in pools" :key="i">
+      <div class="pool" v-for="(pool, index) in LPTokenPools" :key="index">
         <div class="token">
-          <div class="name">{{ token.symbol }}</div>
-          <!-- {{item.isSingleToken?55:65}} -->
-          <token-avatar :token="token" :height="55" :width="55"></token-avatar>
+          <div class="name">{{ pool.token.symbol }}</div>
+          <token-avatar :token="pool.token" :height="55" :width="65" />
         </div>
         <div class="cells">
           <div class="cell">
             <div class="label">{{ t('APY') }}:</div>
-            <div class="value">XXXXXXXX</div>
+            <div class="value">{{ APYS[pool.poolId] ?? '-' }}%</div>
           </div>
           <div class="cell">
             <div class="label">{{ t('totalStaked') }}:</div>
-            <div class="value">XXXXXXXX</div>
+            <div class="value">{{ pool.poolStakedAmount.toSignificant(8) }}</div>
           </div>
           <div class="cell">
             <div class="label">{{ t('staked') }}:</div>
-            <div class="value">XXXXXXXX</div>
+            <div class="value">{{ pool.stakedAmount?.toSignificant(8) ?? '-' }}</div>
           </div>
         </div>
-        <button class="button" @click="toPoolDetail(item?.poolId)">{{ t('viewDetail') }}</button>
+        <button class="button" @click="toPoolDetail(pool)">{{ t('viewDetail') }}</button>
+      </div>
+      <div class="loading" v-if="isLoadingPools">
+        <loading />
+        <span>Loading...</span>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { computed, defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
 import useProxyRouter from '../../common/use/useProxyRouter'
-import { State } from '../../store/state-types'
+import { PoolInfo, State } from '../../store/state-types'
 import TokenAvatar from '../../components/token-avatar/token-avatar.vue'
-import { Token } from '@cointribute/pancakeswap-sdk-v2'
+import Loading from '@/components/loading/loading.vue'
 
 export default defineComponent({
   components: {
     TokenAvatar,
+    Loading,
   },
   setup() {
     const store = useStore<State>()
     const { t } = useI18n()
     const router = useProxyRouter()
 
-    const toPoolDetail = (index: number) => {
-      console.log(index)
-      router.push({ path: '/poolDetail' })
+    const pools = computed(() => store.state.pools)
+    const APYS = computed(() => store.state.APYS)
+    const singleTokenPools = computed(() => {
+      return pools.value.filter((item) => !item.isLPToken)
+    })
+    const LPTokenPools = computed(() => {
+      return pools.value.filter((item) => item.isLPToken)
+    })
+    const isLoadingPools = computed(() => store.state.isLoadingPools)
+
+    const toPoolDetail = (pool: PoolInfo) => {
+      store.dispatch('setCurrentPool', pool)
+      router.push({ path: '/poolDetail', query: { poolId: pool.poolId } })
     }
     const toBulletin = () => {
       router.push({ path: '/bulletin' })
     }
 
     return {
-      token: new Token(56, '0x55d398326f99059ff775485246999027b3197955', 18, 'hhh', 'test'),
-      pools: [{}, {}, {}, {}, {}, {}, {}, {}],
+      singleTokenPools,
+      LPTokenPools,
+      isLoadingPools,
+      APYS,
 
       toPoolDetail,
       toBulletin,
@@ -233,6 +252,21 @@ export default defineComponent({
     display: flex;
     flex-wrap: wrap;
     margin-bottom: 50px;
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      width: 100%;
+      height: 200px;
+      img {
+        height: 50px;
+        width: 50px;
+      }
+      span {
+        margin-top: 10px;
+      }
+    }
     .pool {
       position: relative;
       flex: 0 0 calc(33.33% - 50px);

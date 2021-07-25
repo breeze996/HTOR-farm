@@ -1,6 +1,8 @@
 {
   "singleTokenMining": "单币挖矿",
-  "LPTokenMining": "LP挖矿",
+  "singleTokenMiningArea": "单币挖矿",
+  "LPTokenMining": "LP挖矿区",
+  "LPTokenMiningArea": "单币挖矿区",
   "connect": "Connect",
   "confirmDisconnect": "Confirm disconnet wallet",
   "cancel": "Cancel",
@@ -28,15 +30,13 @@
   "balance": "Balance",
   "pleaseInputStakeAmount": "请输入质押金额",
   "pleaseInputUnstakeAmount": "请输入取出金额",
-  
   "insufficientBalance": "余额不足",
-  "toStake": "去质押",
-  "harvestEarnedSuccess": "提取成功",
-  "harvestEarnedFailed": "提取失败",
-  "stakeFailed": "参与失败",
-  "stakeSuccess": "参与成功",
+  "stakeFailed": "质押失败",
+  "stakeSuccess": "质押成功",
   "unstakeTitle": "取出",
   "unstakeFailed": "取出失败",
   "unstakeSuccess": "取出成功",
-  "unstakeAmountCannotGreaterThanStakeAmount": "取出金额不能大于质押金额"
+  "unstakeAmountCannotGreaterThanStakeAmount": "取出金额不能大于质押金额",
+  "harvestEarnedSuccess": "提取成功",
+  "harvestEarnedFailed": "提取失败"
 }

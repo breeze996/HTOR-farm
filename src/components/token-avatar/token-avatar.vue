@@ -1,13 +1,16 @@
 <template>
-  <img class="token-avatar" :src="src" :width="width" :height="height" />
+  <img
+    class="token-avatar"
+    :src="src ?? require('./default.png')"
+    :width="width"
+    :height="height"
+  />
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType, toRefs } from 'vue'
 import { Token } from '@cointribute/pancakeswap-sdk-v2'
 import avatars from '@/token-avatars/index'
-
-// const defaultAvatar = require('./default.png')
 
 export default defineComponent({
   props: {
@@ -24,7 +27,7 @@ export default defineComponent({
   },
   setup(props) {
     const { token } = toRefs(props)
-    const src = avatars[token.value.address.toLocaleLowerCase()]
+    const src = avatars[token.value?.address?.toLocaleLowerCase()]
 
     return {
       src: src,

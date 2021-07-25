@@ -1,11 +1,13 @@
 import { ActionContext } from 'vuex'
-import { State, UserInfo } from './state-types'
+import { PoolInfo, State, UserInfo } from './state-types'
 import i18n from '../i18n/index'
 import types from './mutation-types'
 import getProvider from '../common/ts/getProvider'
 import { Toast } from '../components/toast/index'
 import { Dialog } from '../components/dialog/index'
 import { CHAIN_ID_LIST } from '../common/ts/const'
+import deepCopy from 'lodash.clonedeep'
+import getPoos, { getPoolInfo, updateAPYS, updatePools, updatePool } from '../data/getPoos'
 
 export default {
   async handleConnect({ commit }: ActionContext<State, State>): Promise<void> {
@@ -47,5 +49,42 @@ export default {
     address: string
   ): Promise<void> {
     commit(types.SET_USER_INFO, { account: address })
+  },
+  async getPools({ commit, dispatch }: ActionContext<State, State>): Promise<void> {
+    commit(types.SET_LOADING_POOLS, true)
+    const pools = await getPoos()
+    commit(types.SET_POOLS, pools)
+    commit(types.SET_LOADING_POOLS, false)
+    dispatch('getAPYS')
+  },
+  async getAPYS({ commit, state }: ActionContext<State, State>): Promise<void> {
+    const APYLIST = await updateAPYS(state.pools)
+    const APYS: { [poolId: number]: string } = {}
+    state.pools.forEach((pool, i) => {
+      APYS[pool.poolId] = APYLIST[i]
+    })
+    commit(types.SET_APYS, APYS)
+  },
+  async updatePools({ commit, state }: ActionContext<State, State>): Promise<void> {
+    const pools = deepCopy(state.pools)
+    const updatedPools = await updatePools(pools, state.userInfo.account)
+    commit(types.SET_POOLS, updatedPools)
+  },
+  setCurrentPool({ commit }: ActionContext<State, State>, pool: PoolInfo): void {
+    commit(types.SET_CURRENT_POOL, pool)
+  },
+  async updatePool({ commit, state }: ActionContext<State, State>, poolId: number): Promise<void> {
+    const pool = await getPoolInfo(poolId)
+    const pools = deepCopy(state.pools)
+    const index = pools.findIndex((item) => item.poolId === poolId)
+    if (pool === undefined || !state.userInfo.account || index === -1) {
+      return
+    }
+    const updatedPool = await updatePool(pool, state.userInfo.account)
+    pools[index] = updatedPool
+    if (state.currentPool?.poolId === poolId) {
+      commit(types.SET_CURRENT_POOL, updatedPool)
+    }
+    commit(types.SET_POOLS, pools)
   },
 }
