@@ -28,7 +28,7 @@
 <script lang="ts">
 import { defineComponent, onBeforeUnmount, toRefs, computed, watch } from 'vue'
 import Popup from '../popup/popup.vue'
-import Loading from '../loading/loading.vue'
+import Loading from '../loading/index.vue'
 import props, { ToastTypes } from './props'
 
 const hasIconTypes = [ToastTypes.SUCCESS, ToastTypes.LOADING]

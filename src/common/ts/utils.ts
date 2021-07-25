@@ -139,3 +139,22 @@ export function getTimeDiff(timestamp: number): string {
 
   return `${days} D ${hours} H ${minutes} M ${seconds}S`
 }
+
+export function formatAmount(balance: string, decimal = 18): number {
+  const balanceBI = JSBI.BigInt(balance)
+  balance = balanceBI.toString()
+  const wholeStr = balance.substring(0, balance.length - decimal) || '0'
+  const fractionStr = balance
+    .substring(balance.length - decimal)
+    .padStart(decimal, '0')
+    .substring(0, decimal)
+
+  return Number(trimTrailingZeroes(`${wholeStr}.${fractionStr}`))
+}
+export function amountToDecimal(amount: string): string {
+  const reg = /([0-9]+\.[0-9]{6})[0-9]*/
+  return amount.replace(reg, '$1')
+}
+function trimTrailingZeroes(value: string): string {
+  return value.replace(/\.?0*$/, '')
+}

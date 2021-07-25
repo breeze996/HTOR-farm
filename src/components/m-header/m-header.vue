@@ -5,8 +5,10 @@
         <img src="./logo.png" />
       </div>
       <div class="navs">
-        <div class="nav">{{ t('singleTokenMining') }}</div>
-        <div class="nav">{{ t('LPTokenMining') }}</div>
+        <div class="nav" @click="scrollToControl('singleTokenMining')">
+          {{ t('singleTokenMining') }}
+        </div>
+        <div class="nav" @click="scrollToControl('LPTokenMining')">{{ t('LPTokenMining') }}</div>
       </div>
       <div class="connector">
         <div class="connect" v-if="!isConnected" @click="connect">{{ t('connect') }}</div>
@@ -25,7 +27,7 @@ import Langs from '../langs/langs.vue'
 import { useI18n } from 'vue-i18n'
 import { useStore } from 'vuex'
 import { State } from '../../store/state-types'
-import { shortenAddress } from '../../common/ts/utils'
+import { shortenAddress, getElementPosition } from '../../common/ts/utils'
 import { Dialog } from '../dialog/index'
 
 export default defineComponent({
@@ -51,6 +53,10 @@ export default defineComponent({
         },
       })
     }
+    const scrollToControl = async (id: string) => {
+      const { y } = getElementPosition(id)
+      document.body.scrollTop = y ? y : 0
+    }
 
     return {
       account: computed(() => store.state.userInfo.account),
@@ -61,6 +67,7 @@ export default defineComponent({
       connect,
       shortenAddress,
       onAddressClick,
+      scrollToControl,
     }
   },
 })
@@ -99,6 +106,7 @@ export default defineComponent({
       .nav {
         display: flex;
         flex: 1;
+        cursor: pointer;
       }
     }
     .connector {

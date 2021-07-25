@@ -10,11 +10,13 @@
         <div class="cells">
           <div class="cell">
             <div class="label">{{ t('totalLockedPosition') }}:</div>
-            <div class="value">XXXXXXXX</div>
+            <div class="value">
+              {{ totalLockedPosition ?? '-' }}
+            </div>
           </div>
           <div class="cell">
             <div class="label">{{ t('totalUserRevenueToday') }}:</div>
-            <div class="value">XXXXXXX</div>
+            <div class="value">{{ totalUserRevenueToday ?? '-' }}</div>
           </div>
         </div>
       </div>
@@ -29,7 +31,7 @@
         </div>
       </div>
     </div>
-    <div class="bar">
+    <div class="bar" id="singleTokenMining">
       <img src="./arrow-down.png" />
       <span>{{ t('singleTokenMining') }}</span>
     </div>
@@ -50,7 +52,9 @@
           </div>
           <div class="cell">
             <div class="label">{{ t('staked') }}:</div>
-            <div class="value">{{ pool.stakedAmount?.toSignificant(8) ?? '-' }}</div>
+            <div class="value">
+              {{ !isConnected ? '-' : pool.stakedAmount?.toSignificant(8) ?? '-' }}
+            </div>
           </div>
         </div>
         <button class="button" @click="toPoolDetail(pool)">{{ t('viewDetail') }}</button>
@@ -60,7 +64,7 @@
         <span>Loading...</span>
       </div>
     </div>
-    <div class="bar">
+    <div class="bar" id="LPTokenMining">
       <img src="./arrow-down.png" />
       <span>{{ t('LPTokenMining') }}</span>
     </div>
@@ -81,7 +85,9 @@
           </div>
           <div class="cell">
             <div class="label">{{ t('staked') }}:</div>
-            <div class="value">{{ pool.stakedAmount?.toSignificant(8) ?? '-' }}</div>
+            <div class="value">
+              {{ !isConnected ? '-' : pool.stakedAmount?.toSignificant(8) ?? '-' }}
+            </div>
           </div>
         </div>
         <button class="button" @click="toPoolDetail(pool)">{{ t('viewDetail') }}</button>
@@ -101,7 +107,9 @@ import { useStore } from 'vuex'
 import useProxyRouter from '../../common/use/useProxyRouter'
 import { PoolInfo, State } from '../../store/state-types'
 import TokenAvatar from '../../components/token-avatar/token-avatar.vue'
-import Loading from '@/components/loading/loading.vue'
+import Loading from '../../components/loading/index.vue'
+import { JSBI, TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
+import { formatAmount, amountToDecimal } from '@/common/ts/utils'
 
 export default defineComponent({
   components: {
@@ -115,6 +123,7 @@ export default defineComponent({
 
     const pools = computed(() => store.state.pools)
     const APYS = computed(() => store.state.APYS)
+    const isConnected = computed(() => store.getters.isConnected)
     const singleTokenPools = computed(() => {
       return pools.value.filter((item) => !item.isLPToken)
     })
@@ -122,6 +131,37 @@ export default defineComponent({
       return pools.value.filter((item) => item.isLPToken)
     })
     const isLoadingPools = computed(() => store.state.isLoadingPools)
+    const totalLockedPosition = computed(() => {
+      if (!pools.value.length) {
+        return undefined
+      }
+      const totalLockedPosition = pools.value.reduce(
+        (totalLockedPosition, item) =>
+          JSBI.add(totalLockedPosition, JSBI.BigInt(item.poolStakedAmount.raw.toString())),
+        JSBI.BigInt(0)
+      )
+      const foumardTotalLockedPosition = amountToDecimal(
+        formatAmount(totalLockedPosition?.toString()).toString()
+      )
+      return foumardTotalLockedPosition
+    })
+    const totalUserRevenueToday = computed(() => {
+      if (!pools.value.length || !isConnected.value || !pools.value[0].earningsAmount) {
+        return undefined
+      }
+      const totalUserRevenueToday = pools.value.reduce(
+        (totalUserRevenueToday, item) =>
+          JSBI.add(
+            totalUserRevenueToday,
+            JSBI.BigInt((item?.earningsAmount as TokenAmount).raw.toString())
+          ),
+        JSBI.BigInt(0)
+      )
+      const foumardTotalUserRevenueToday = amountToDecimal(
+        formatAmount(totalUserRevenueToday?.toString()).toString()
+      )
+      return foumardTotalUserRevenueToday
+    })
 
     const toPoolDetail = (pool: PoolInfo) => {
       store.dispatch('setCurrentPool', pool)
@@ -135,6 +175,9 @@ export default defineComponent({
       singleTokenPools,
       LPTokenPools,
       isLoadingPools,
+      isConnected,
+      totalLockedPosition,
+      totalUserRevenueToday,
       APYS,
 
       toPoolDetail,

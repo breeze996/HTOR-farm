@@ -12,7 +12,6 @@ export default defineComponent({
   setup() {
     const store = useStore<State>()
     const isConnected = computed<boolean>(() => store.getters.isConnected)
-    const pools = computed(() => store.state.pools)
     const isLoadingPools = computed(() => store.state.isLoadingPools)
 
     store.dispatch('getPools')

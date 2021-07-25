@@ -40,8 +40,14 @@ export async function updatePool(pool: PoolInfo, account: string): Promise<PoolI
   }
   const web3 = getNotAccountWeb3()
   const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
-  const userInfo = await contract.methods.userInfo(pool.poolId, account).call()
-  return Object.assign({}, pool, { stakedAmount: new TokenAmount(pool.token, userInfo.amount) })
+  const [userInfo, earnings] = await Promise.all([
+    contract.methods.userInfo(pool.poolId, account).call(),
+    contract.methods.pendingSushi(pool.poolId, account).call(),
+  ])
+  return Object.assign({}, pool, {
+    earningsAmount: new TokenAmount(pool.miningToken, earnings),
+    stakedAmount: new TokenAmount(pool.token, userInfo.amount),
+  })
 }
 
 export async function getPoolInfo(poolId: number): Promise<PoolInfo | undefined> {

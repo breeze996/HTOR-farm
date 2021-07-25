@@ -21,6 +21,7 @@ export interface PoolInfo {
   poolType: POOL_TYPE
   poolStakedAmount: TokenAmount
   stakedAmount?: TokenAmount
+  earningsAmount?: TokenAmount
 }
 
 export enum POOL_TYPE {

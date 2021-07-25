@@ -20,11 +20,11 @@
       </div>
       <div class="cell">
         <div class="label">{{ t('staked') }}:</div>
-        <div class="value">{{ stakedAmount?.toSignificant(9) ?? '-' }}</div>
+        <div class="value">{{ !isConnected ? '-' : stakedAmount?.toSignificant(9) ?? '-' }}</div>
       </div>
       <div class="cell">
         <div class="label">{{ t('earned') }}:</div>
-        <div class="value">{{ earningsAmount?.toSignificant(9) ?? '-' }}</div>
+        <div class="value">{{ !isConnected ? '-' : earningsAmount?.toSignificant(9) ?? '-' }}</div>
       </div>
     </div>
     <div class="buttons">
@@ -132,8 +132,10 @@
         <div class="earnings">
           <span>{{ t('earned') }}</span> : <span>{{ earningsAmount?.toSignificant(9) }}</span>
         </div>
-        <div class="buttons" @click="onHarvestEarned">
-          <button>{{ t('harvestEarned') }}</button>
+        <div class="buttons">
+          <button :disabled="harvestEarnedDisable" @click="onHarvestEarned">
+            {{ t('harvestEarned') }}
+          </button>
         </div>
       </div>
     </model>
@@ -149,7 +151,7 @@ import { useRoute } from 'vue-router'
 import { PoolInfo, State } from '../../store/state-types'
 import { TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
 import TokenAvatar from '../../components/token-avatar/token-avatar.vue'
-import Loading from '../../components/loading/loading.vue'
+import Loading from '../../components/loading/index.vue'
 import Model from '../../components/model/model.vue'
 import NumericalInput from '../../components/numerical-input/numerical-input.vue'
 import { tryParseAmount, getContract } from '../../common/ts/utils'
@@ -210,7 +212,13 @@ export default defineComponent({
       }
       return false
     })
-
+    const harvestEarnedDisable = computed(() => {
+      if (!earningsAmount.value) {
+        return true
+      }
+      const Zore = new TokenAmount(earningsAmount.value.token, '0')
+      return !earningsAmount.value.greaterThan(Zore)
+    })
     const isApproved = ref(false)
     const isApproving = ref(false)
     const isLoading = ref(false)
@@ -408,6 +416,7 @@ export default defineComponent({
       baseUnstakeAmount,
       stakeButtonDisable,
       unstakeButtonDisable,
+      harvestEarnedDisable,
       isUnstakeInsufficient,
       isInsufficientBalance,
 

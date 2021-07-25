@@ -2,8 +2,9 @@ import axios from 'axios'
 import { abi as MasterChefAbi } from '../../abi/MasterChef.json'
 import { getContract } from './utils'
 import { MASTER_CHEF_ADDRESS, MINING_TOKEN } from './const'
-import { JSBI, Token } from '@cointribute/pancakeswap-sdk-v2'
+import { Token } from '@cointribute/pancakeswap-sdk-v2'
 import getNotAccountWeb3 from './getNotAccountWeb3'
+import { formatAmount } from './utils'
 
 const keys = [
   'GQVQGMKEJ5W5NUR6M3STT8UJKRAJ7S7GEZ',
@@ -51,20 +52,4 @@ export default async function getAPY(stakeToken: Token, poolPoint: number): Prom
   } catch (error) {
     return '-'
   }
-}
-
-export function formatAmount(balance: string, decimal = 18): number {
-  const balanceBI = JSBI.BigInt(balance)
-  balance = balanceBI.toString()
-  const wholeStr = balance.substring(0, balance.length - decimal) || '0'
-  const fractionStr = balance
-    .substring(balance.length - decimal)
-    .padStart(decimal, '0')
-    .substring(0, decimal)
-
-  return Number(trimTrailingZeroes(`${wholeStr}.${fractionStr}`))
-}
-
-function trimTrailingZeroes(value: string) {
-  return value.replace(/\.?0*$/, '')
 }
