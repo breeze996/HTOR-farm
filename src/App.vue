@@ -22,12 +22,6 @@ export default defineComponent({
       })
     }
 
-    if (window.ethereum && window.ethereum.on) {
-      window.ethereum.on('accountsChanged', ([address]: string[]) => {
-        store.dispatch('handleAccountChange', address)
-      })
-    }
-
     watch([isConnected, isLoadingPools], ([isConnected, isLoadingPools]) => {
       if (isConnected && !isLoadingPools) {
         store.dispatch('updatePools')

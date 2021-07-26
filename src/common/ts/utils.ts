@@ -40,12 +40,6 @@ export function getElementPosition(elementId: string): { x: number; y: number } 
   return { x: currentLeft, y: currentTop }
 }
 
-export function sleep(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
 export function isAddress(value: string): string | false {
   try {
     return getAddress(value)
@@ -107,39 +101,6 @@ export function tryParseAmount(value?: string, currency?: Token): TokenAmount | 
   return undefined
 }
 
-export const generateId = function (): number {
-  return Math.floor(Math.random() * 10000)
-}
-
-// export function calculateGasMargin(value) {
-//   if (!value) {
-//     return 0
-//   }
-
-//   value = new BN(value)
-//   return value.mul(new BN(3)).toString()
-// }
-
-export function getTimeDiff(timestamp: number): string {
-  const now = new Date().getTime()
-
-  const milisecDiff = timestamp - now
-
-  if (!milisecDiff || milisecDiff < 0) {
-    return ''
-  }
-
-  const days = Math.floor(milisecDiff / (24 * 3600 * 1000))
-  const leave1 = milisecDiff % (24 * 3600 * 1000)
-  const hours = Math.floor(leave1 / (3600 * 1000))
-  const leave2 = leave1 % (3600 * 1000)
-  const minutes = Math.floor(leave2 / (60 * 1000))
-  const leave3 = leave2 % (60 * 1000)
-  const seconds = Math.round(leave3 / 1000)
-
-  return `${days} D ${hours} H ${minutes} M ${seconds}S`
-}
-
 export function formatAmount(balance: string, decimal = 18): number {
   const balanceBI = JSBI.BigInt(balance)
   balance = balanceBI.toString()
@@ -151,10 +112,12 @@ export function formatAmount(balance: string, decimal = 18): number {
 
   return Number(trimTrailingZeroes(`${wholeStr}.${fractionStr}`))
 }
+
 export function amountToDecimal(amount: string): string {
   const reg = /([0-9]+\.[0-9]{6})[0-9]*/
   return amount.replace(reg, '$1')
 }
+
 function trimTrailingZeroes(value: string): string {
   return value.replace(/\.?0*$/, '')
 }

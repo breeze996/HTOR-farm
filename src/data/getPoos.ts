@@ -6,24 +6,15 @@ import { PoolInfo, POOL_TYPE } from '../store/state-types'
 import { MASTER_CHEF_ADDRESS, ZERO, MINING_TOKEN } from '../common/ts/const'
 import { abi as MasterChefAbi } from '../abi/MasterChef.json'
 import getToken from './getToken'
-import getAPY from '@/common/ts/getAPY'
 
 export default async function getPools(): Promise<PoolInfo[]> {
   const web3 = getNotAccountWeb3()
   const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
   const length = await contract.methods.poolLength().call()
   const poolIdList = [...new Array(Number(length)).keys()]
-  const pools = (await Promise.all(poolIdList.map((id) => getPoolInfo(id)))) as PoolInfo[]
+  const pools = await Promise.all(poolIdList.map((id) => getPoolInfo(id)))
 
-  return pools
-}
-
-export async function updateAPYS(pools: PoolInfo[]): Promise<string[]> {
-  const allPoolPoint = pools.reduce((t, { allocPoint }) => (t += allocPoint), 0)
-
-  return await Promise.all(
-    pools.map(async (item) => await getAPY(item.token, allPoolPoint / item.allocPoint))
-  )
+  return pools.filter((item) => item !== undefined) as PoolInfo[]
 }
 
 export async function updatePools(pools: PoolInfo[], account?: string): Promise<PoolInfo[]> {
@@ -35,9 +26,6 @@ export async function updatePools(pools: PoolInfo[], account?: string): Promise<
 }
 
 export async function updatePool(pool: PoolInfo, account: string): Promise<PoolInfo> {
-  if (account === undefined) {
-    return pool
-  }
   const web3 = getNotAccountWeb3()
   const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
   const [userInfo, earnings] = await Promise.all([

@@ -1,21 +1,17 @@
 import axios from 'axios'
-import { abi as MasterChefAbi } from '../../abi/MasterChef.json'
-import { getContract } from './utils'
-import { MASTER_CHEF_ADDRESS, MINING_TOKEN } from './const'
+import { abi as MasterChefAbi } from '../abi/MasterChef.json'
+import { getContract } from '../common/ts/utils'
+import { MASTER_CHEF_ADDRESS, MINING_TOKEN } from '../common/ts/const'
 import { Token } from '@cointribute/pancakeswap-sdk-v2'
-import getNotAccountWeb3 from './getNotAccountWeb3'
-import { formatAmount } from './utils'
+import getNotAccountWeb3 from '../common/ts/getNotAccountWeb3'
+import { formatAmount } from '../common/ts/utils'
 
 const keys = [
   'GQVQGMKEJ5W5NUR6M3STT8UJKRAJ7S7GEZ',
   'P5MYKB3WAHT2X447QZCEAV87RRV4BYMMMB',
   'YUA2J37Q2P34V9UUNYIIE4AVF37FGUK2A3',
 ]
-// let keyIndex = {
-//   GQVQGMKEJ5W5NUR6M3STT8UJKRAJ7S7GEZ: 0,
-//   P5MYKB3WAHT2X447QZCEAV87RRV4BYMMMB: 0,
-//   YUA2J37Q2P34V9UUNYIIE4AVF37FGUK2A3: 0,
-// }
+
 let keyIndex = 0
 
 export default async function getAPY(stakeToken: Token, poolPoint: number): Promise<string> {

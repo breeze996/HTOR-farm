@@ -7,7 +7,8 @@ import { Toast } from '../components/toast/index'
 import { Dialog } from '../components/dialog/index'
 import { CHAIN_ID_LIST } from '../common/ts/const'
 import deepCopy from 'lodash.clonedeep'
-import getPoos, { getPoolInfo, updateAPYS, updatePools, updatePool } from '../data/getPoos'
+import getPoos, { getPoolInfo, updatePools, updatePool } from '../data/getPoos'
+import getAPYS from '@/data/getAPYS'
 
 export default {
   async handleConnect({ commit }: ActionContext<State, State>): Promise<void> {
@@ -46,19 +47,18 @@ export default {
   },
   async handleAccountChange(
     { commit }: ActionContext<State, State>,
-    address: string
+    account: string
   ): Promise<void> {
-    commit(types.SET_USER_INFO, { account: address })
+    commit(types.SET_USER_INFO, { account })
   },
   async getPools({ commit, dispatch }: ActionContext<State, State>): Promise<void> {
     commit(types.SET_LOADING_POOLS, true)
-    const pools = await getPoos()
-    commit(types.SET_POOLS, pools)
+    commit(types.SET_POOLS, await getPoos())
     commit(types.SET_LOADING_POOLS, false)
     dispatch('getAPYS')
   },
   async getAPYS({ commit, state }: ActionContext<State, State>): Promise<void> {
-    const APYLIST = await updateAPYS(state.pools)
+    const APYLIST = await getAPYS(state.pools)
     const APYS: { [poolId: number]: string } = {}
     state.pools.forEach((pool, i) => {
       APYS[pool.poolId] = APYLIST[i]

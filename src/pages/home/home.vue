@@ -16,10 +16,10 @@ import { defineComponent } from 'vue'
 import MHeader from '../../components/m-header/m-header.vue'
 
 export default defineComponent({
+  name: 'Home',
   components: {
     MHeader,
   },
-  name: 'Home',
 })
 </script>
 

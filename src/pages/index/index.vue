@@ -33,7 +33,7 @@
     </div>
     <div class="bar" id="singleTokenMining">
       <img src="./arrow-down.png" />
-      <span>{{ t('singleTokenMining') }}</span>
+      <span>{{ t('singleTokenMiningArea') }}</span>
     </div>
     <div class="pools">
       <div class="pool" v-for="(pool, index) in singleTokenPools" :key="index">
@@ -66,7 +66,7 @@
     </div>
     <div class="bar" id="LPTokenMining">
       <img src="./arrow-down.png" />
-      <span>{{ t('LPTokenMining') }}</span>
+      <span>{{ t('LPTokenMiningArea') }}</span>
     </div>
     <div class="pools">
       <div class="pool" v-for="(pool, index) in LPTokenPools" :key="index">

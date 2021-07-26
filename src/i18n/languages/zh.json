@@ -1,8 +1,8 @@
 {
   "singleTokenMining": "单币挖矿",
-  "singleTokenMiningArea": "单币挖矿",
-  "LPTokenMining": "LP挖矿区",
-  "LPTokenMiningArea": "单币挖矿区",
+  "singleTokenMiningArea": "单币挖矿区",
+  "LPTokenMining": "LP挖矿",
+  "LPTokenMiningArea": "LP挖矿区",
   "connect": "连接钱包",
   "confirmDisconnect": "确认断开钱包？",
   "cancel": "取消",
