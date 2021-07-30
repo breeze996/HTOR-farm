@@ -1,6 +1,6 @@
 <template>
-  <div class="nav-bar">
-    <img src="./arrow-left.png" @click="back" />
+  <div class="nav-bar" @click="back">
+    <img src="./arrow-left.png" />
     <span>{{ t('back') }}</span>
   </div>
 </template>

@@ -7,7 +7,7 @@
         :height="68"
         :width="currentPool?.isLPToken ? 78 : 68"
       />
-      <div class="name">{{ currentPool?.token?.symbol ?? '-' }}</div>
+      <div class="name">{{ currentPool?.tokenSymbol ?? '-' }}</div>
     </div>
     <div class="cells">
       <div class="cell">
@@ -16,15 +16,24 @@
       </div>
       <div class="cell">
         <div class="label">{{ t('totalStaked') }}:</div>
-        <div class="value">{{ currentPool?.poolStakedAmount.toSignificant(9) ?? '-' }}</div>
+        <div class="value">
+          <span> {{ currentPool?.poolStakedAmount.toSignificant(9) ?? '-' }}</span>
+          <span class="symbol">{{ currentPool?.tokenSymbol }} </span>
+        </div>
       </div>
       <div class="cell">
         <div class="label">{{ t('staked') }}:</div>
-        <div class="value">{{ !isConnected ? '-' : stakedAmount?.toSignificant(9) ?? '-' }}</div>
+        <div class="value">
+          <span> {{ !isConnected ? '-' : stakedAmount?.toSignificant(9) ?? '-' }}</span>
+          <span class="symbol">{{ currentPool?.tokenSymbol }} </span>
+        </div>
       </div>
       <div class="cell">
         <div class="label">{{ t('earned') }}:</div>
-        <div class="value">{{ !isConnected ? '-' : earningsAmount?.toSignificant(9) ?? '-' }}</div>
+        <div class="value">
+          <span>{{ !isConnected ? '-' : earningsAmount?.toSignificant(9) ?? '-' }}</span>
+          <span class="symbol">{{ earningsAmount?.token.symbol }} </span>
+        </div>
       </div>
     </div>
     <div class="buttons">
@@ -56,6 +65,7 @@
         <div class="balance">
           <span>{{ t('balance') }}</span> :
           <span>{{ stakeTokenBalance?.toSignificant(9) ?? '-' }}</span>
+          <span class="symbol">{{ currentPool?.tokenSymbol }}</span>
         </div>
         <div class="input-wrap">
           <numerical-input
@@ -64,7 +74,7 @@
             :modelValue="baseStakeAmount"
             @input="onStakeInput"
           />
-          <span class="token-name">{{ currentPool?.token?.symbol ?? '-' }}</span>
+          <span class="token-name">{{ currentPool?.tokenSymbol ?? '-' }}</span>
           <span class="max" @click="onStakeMax">Max</span>
         </div>
         <div class="buttons">
@@ -94,6 +104,7 @@
         <div class="staked">
           <span>{{ t('staked') }}</span> :
           <span>{{ stakedAmount?.toSignificant(9) ?? '-' }}</span>
+          <span class="symbol">{{ currentPool?.tokenSymbol }}</span>
         </div>
         <div class="input-wrap">
           <numerical-input
@@ -102,7 +113,7 @@
             :modelValue="baseUnstakeAmount"
             @input="onUnstakeInput"
           />
-          <span class="token-name">{{ currentPool?.token?.symbol ?? '-' }}</span>
+          <span class="token-name">{{ currentPool?.tokenSymbol ?? '-' }}</span>
           <span class="max" @click="onUnstakeMax">Max</span>
         </div>
         <div class="buttons">
@@ -131,6 +142,7 @@
         />
         <div class="earnings">
           <span>{{ t('earned') }}</span> : <span>{{ earningsAmount?.toSignificant(9) }}</span>
+          <span class="symbol">{{ earningsAmount?.token.symbol }}</span>
         </div>
         <div class="buttons">
           <button :disabled="harvestEarnedDisable" @click="onHarvestEarned">
@@ -181,7 +193,7 @@ export default defineComponent({
     const account = computed(() => store.state.userInfo.account)
     const APYS = computed(() => store.state.APYS)
     const currentPool = computed(() => store.state.currentPool)
-    const isConnected = computed(() => store.getters.isConnected)
+    const isConnected = computed<boolean>(() => store.getters.isConnected)
 
     const isInsufficientBalance = computed(() => {
       if (!stakeAmount.value || !stakeTokenBalance.value) {
@@ -464,6 +476,9 @@ export default defineComponent({
       line-height: 29px;
       .value {
         font-weight: bold;
+        .symbol {
+          margin-left: 5px;
+        }
       }
     }
   }
@@ -547,6 +562,9 @@ export default defineComponent({
       text-align: center;
       font-size: 24px;
       line-height: 33px;
+      .symbol {
+        margin-left: 5px;
+      }
     }
     .input-wrap {
       display: flex;

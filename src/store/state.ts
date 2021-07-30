@@ -6,6 +6,7 @@ const state: State = {
   APYS: {},
   isLoadingPools: false,
   currentPool: undefined,
+  totalLockedPosition: undefined,
 }
 
 export default state

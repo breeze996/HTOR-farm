@@ -1,17 +1,20 @@
 import getNotAccountWeb3 from '../common/ts/getNotAccountWeb3'
 import JSBI from 'jsbi'
 import { TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
-import { getContract } from '../common/ts/utils'
+import { getContract, isWrappedBNB } from '../common/ts/utils'
 import { PoolInfo, POOL_TYPE } from '../store/state-types'
 import { MASTER_CHEF_ADDRESS, ZERO, MINING_TOKEN } from '../common/ts/const'
-import { abi as MasterChefAbi } from '../abi/MasterChef.json'
+// import { abi as MasterChefAbi } from '../abi/MasterChef.json'
+import MasterChefAbi from '../abi/ELPDOTPOOL.json'
 import getToken from './getToken'
+import getCurrencysByLPToken from './getCurrencysByLPToken'
 
 export default async function getPools(): Promise<PoolInfo[]> {
   const web3 = getNotAccountWeb3()
   const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, web3)
   const length = await contract.methods.poolLength().call()
   const poolIdList = [...new Array(Number(length)).keys()]
+  console.log(length)
   const pools = await Promise.all(poolIdList.map((id) => getPoolInfo(id)))
 
   return pools.filter((item) => item !== undefined) as PoolInfo[]
@@ -52,17 +55,34 @@ export async function getPoolInfo(poolId: number): Promise<PoolInfo | undefined>
     allocPoint: string
     pledgeTotalAmount: string
   }
+  console.log(pledgeTotalAmount)
   if (JSBI.equal(JSBI.BigInt(allocPoint), ZERO)) {
     return undefined
   }
-  const [token] = await Promise.all([getToken(LPtoken)])
+  //const isLPToken= poolType === POOL_TYPE.LP_TOKEN
+  const isLPToken = true
+  const token = await getToken(LPtoken)
+  const currencys = await getCurrencysByLPToken(token)
+
+  const tokenSymbol =
+    isLPToken && currencys
+      ? `${isWrappedBNB(currencys[0]) ? 'BNB' : currencys[0].symbol}/${
+          isWrappedBNB(currencys[1]) ? 'BNB' : currencys[1].symbol
+        }-LP`
+      : token.symbol
+      ? token.symbol
+      : '-'
+
   return {
     poolId,
     token,
+    currencys,
     poolType,
-    isLPToken: poolType === POOL_TYPE.LP_TOKEN,
+    isLPToken,
+    tokenSymbol,
     allocPoint: Number(allocPoint),
     miningToken: MINING_TOKEN,
-    poolStakedAmount: new TokenAmount(token, pledgeTotalAmount),
+    poolStakedAmount: new TokenAmount(token, '100000000000000000000'),
+    // poolStakedAmount: new TokenAmount(token, pledgeTotalAmount),
   }
 }

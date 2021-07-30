@@ -9,6 +9,7 @@ import { CHAIN_ID_LIST } from '../common/ts/const'
 import deepCopy from 'lodash.clonedeep'
 import getPoos, { getPoolInfo, updatePools, updatePool } from '../data/getPoos'
 import getAPYS from '@/data/getAPYS'
+import getTotalLockedPosition from '@/data/getTotalLockedPosition'
 
 export default {
   async handleConnect({ commit }: ActionContext<State, State>): Promise<void> {
@@ -56,14 +57,13 @@ export default {
     commit(types.SET_POOLS, await getPoos())
     commit(types.SET_LOADING_POOLS, false)
     dispatch('getAPYS')
+    dispatch('getTotalLockedPosition')
   },
   async getAPYS({ commit, state }: ActionContext<State, State>): Promise<void> {
-    const APYLIST = await getAPYS(state.pools)
-    const APYS: { [poolId: number]: string } = {}
-    state.pools.forEach((pool, i) => {
-      APYS[pool.poolId] = APYLIST[i]
-    })
-    commit(types.SET_APYS, APYS)
+    commit(types.SET_APYS, await getAPYS(state.pools))
+  },
+  async getTotalLockedPosition({ commit, state }: ActionContext<State, State>): Promise<void> {
+    commit(types.SET_TOTAL_LOCKED_POSITION, await getTotalLockedPosition(state.pools))
   },
   async updatePools({ commit, state }: ActionContext<State, State>): Promise<void> {
     const pools = deepCopy(state.pools)

@@ -5,6 +5,7 @@ export interface State {
   pools: PoolInfo[]
   APYS: { [poolId: number]: string }
   isLoadingPools: boolean
+  totalLockedPosition: TokenAmount | undefined
   currentPool?: PoolInfo
 }
 
@@ -20,6 +21,8 @@ export interface PoolInfo {
   isLPToken: boolean
   poolType: POOL_TYPE
   poolStakedAmount: TokenAmount
+  tokenSymbol: string
+  currencys: [Token, Token] | undefined
   stakedAmount?: TokenAmount
   earningsAmount?: TokenAmount
 }

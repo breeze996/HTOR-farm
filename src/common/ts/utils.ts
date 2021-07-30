@@ -3,6 +3,7 @@ import { parseUnits } from '@ethersproject/units'
 import { Token, TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
 import Web3 from 'web3'
 import JSBI from 'jsbi'
+import { USDT, WRAPPED_BNB } from './const'
 
 const toString = Object.prototype.toString
 
@@ -120,4 +121,12 @@ export function amountToDecimal(amount: string): string {
 
 function trimTrailingZeroes(value: string): string {
   return value.replace(/\.?0*$/, '')
+}
+
+export function isUSDT(token: Token): boolean {
+  return token.address.toUpperCase() === USDT.address.toUpperCase()
+}
+
+export function isWrappedBNB(token: Token): boolean {
+  return token.address.toUpperCase() === WRAPPED_BNB.address.toUpperCase()
 }

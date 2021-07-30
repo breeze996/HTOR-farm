@@ -11,12 +11,18 @@
           <div class="cell">
             <div class="label">{{ t('totalLockedPosition') }}:</div>
             <div class="value">
-              {{ totalLockedPosition ?? '-' }}
+              <span>{{ totalLockedPosition?.toSignificant() ?? '-' }}</span>
+              <span class="symbol" v-if="totalLockedPosition">
+                {{ totalLockedPosition?.token.symbol }}
+              </span>
             </div>
           </div>
           <div class="cell">
             <div class="label">{{ t('totalUserRevenueToday') }}:</div>
-            <div class="value">{{ totalUserRevenueToday ?? '-' }}</div>
+            <div class="value">
+              <span>{{ totalUserRevenueToday ?? '-' }}</span>
+              <span class="symbol" v-if="totalUserRevenueToday">{{ MINING_TOKEN.symbol }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -38,7 +44,7 @@
     <div class="pools">
       <div class="pool" v-for="(pool, index) in singleTokenPools" :key="index">
         <div class="token">
-          <div class="name">{{ pool.token.symbol }}</div>
+          <div class="name">{{ pool.tokenSymbol }}</div>
           <token-avatar :token="pool.token" :height="55" :width="55" />
         </div>
         <div class="cells">
@@ -48,12 +54,16 @@
           </div>
           <div class="cell">
             <div class="label">{{ t('totalStaked') }}:</div>
-            <div class="value">{{ pool.poolStakedAmount.toSignificant(8) }}</div>
+            <div class="value">
+              <span> {{ pool.poolStakedAmount.toSignificant(8) }}</span>
+              <span class="symbol">{{ pool.tokenSymbol }}</span>
+            </div>
           </div>
           <div class="cell">
             <div class="label">{{ t('staked') }}:</div>
             <div class="value">
-              {{ !isConnected ? '-' : pool.stakedAmount?.toSignificant(8) ?? '-' }}
+              <span> {{ !isConnected ? '-' : pool.stakedAmount?.toSignificant(8) ?? '-' }}</span>
+              <span class="symbol">{{ pool.tokenSymbol }}</span>
             </div>
           </div>
         </div>
@@ -71,7 +81,7 @@
     <div class="pools">
       <div class="pool" v-for="(pool, index) in LPTokenPools" :key="index">
         <div class="token">
-          <div class="name">{{ pool.token.symbol }}</div>
+          <div class="name">{{ pool.tokenSymbol }}</div>
           <token-avatar :token="pool.token" :height="55" :width="65" />
         </div>
         <div class="cells">
@@ -81,12 +91,16 @@
           </div>
           <div class="cell">
             <div class="label">{{ t('totalStaked') }}:</div>
-            <div class="value">{{ pool.poolStakedAmount.toSignificant(8) }}</div>
+            <div class="value">
+              <span> {{ pool.poolStakedAmount.toSignificant(6) }}</span>
+              <span class="symbol">{{ pool.tokenSymbol }}</span>
+            </div>
           </div>
           <div class="cell">
             <div class="label">{{ t('staked') }}:</div>
             <div class="value">
-              {{ !isConnected ? '-' : pool.stakedAmount?.toSignificant(8) ?? '-' }}
+              <span> {{ !isConnected ? '-' : pool.stakedAmount?.toSignificant(6) ?? '-' }}</span>
+              <span class="symbol">{{ pool.tokenSymbol }}</span>
             </div>
           </div>
         </div>
@@ -110,6 +124,7 @@ import TokenAvatar from '../../components/token-avatar/token-avatar.vue'
 import Loading from '../../components/loading/index.vue'
 import { JSBI, TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
 import { formatAmount, amountToDecimal } from '@/common/ts/utils'
+import { MINING_TOKEN } from '@/common/ts/const'
 
 export default defineComponent({
   components: {
@@ -123,7 +138,7 @@ export default defineComponent({
 
     const pools = computed(() => store.state.pools)
     const APYS = computed(() => store.state.APYS)
-    const isConnected = computed(() => store.getters.isConnected)
+    const isConnected = computed<boolean>(() => store.getters.isConnected)
     const singleTokenPools = computed(() => {
       return pools.value.filter((item) => !item.isLPToken)
     })
@@ -131,20 +146,7 @@ export default defineComponent({
       return pools.value.filter((item) => item.isLPToken)
     })
     const isLoadingPools = computed(() => store.state.isLoadingPools)
-    const totalLockedPosition = computed(() => {
-      if (!pools.value.length) {
-        return undefined
-      }
-      const totalLockedPosition = pools.value.reduce(
-        (totalLockedPosition, item) =>
-          JSBI.add(totalLockedPosition, JSBI.BigInt(item.poolStakedAmount.raw.toString())),
-        JSBI.BigInt(0)
-      )
-      const foumardTotalLockedPosition = amountToDecimal(
-        formatAmount(totalLockedPosition?.toString()).toString()
-      )
-      return foumardTotalLockedPosition
-    })
+    const totalLockedPosition = computed(() => store.state.totalLockedPosition)
     const totalUserRevenueToday = computed(() => {
       if (!pools.value.length || !isConnected.value || !pools.value[0].earningsAmount) {
         return undefined
@@ -179,6 +181,7 @@ export default defineComponent({
       totalLockedPosition,
       totalUserRevenueToday,
       APYS,
+      MINING_TOKEN,
 
       toPoolDetail,
       toBulletin,
@@ -238,6 +241,9 @@ export default defineComponent({
           font-size: 20px;
           &:last-child {
             margin-bottom: 0;
+          }
+          .symbol {
+            margin-left: 5px;
           }
         }
       }
@@ -314,11 +320,10 @@ export default defineComponent({
       position: relative;
       flex: 0 0 calc(33.33% - 50px);
       margin: 50px 75px 0 0;
-      height: 380px;
       background: #283864;
       box-shadow: -3px 3px 5px rgba(10, 20, 48, 0.5);
       border-radius: 20px;
-      padding: 30px;
+      padding: 30px 30px 100px 30px;
       box-sizing: border-box;
       &:nth-child(3n + 3) {
         margin-right: 0;
@@ -338,8 +343,18 @@ export default defineComponent({
           justify-content: space-between;
           margin: 30px 0;
           font-size: 16px;
+          .label {
+            flex: 1;
+          }
           .value {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            flex: 2;
             font-weight: bold;
+            .symbol {
+              margin-left: 5px;
+            }
           }
         }
       }
@@ -440,9 +455,8 @@ export default defineComponent({
       .pool {
         flex: 0 0 calc(50% - 8px);
         margin: 15px 0 0 0;
-        height: 190px;
         border-radius: 10px;
-        padding: 15px;
+        padding: 15px 15px 65px 15px;
         &:nth-child(3n + 3) {
           margin-right: 0;
         }

@@ -5,13 +5,11 @@ function getProvider(): any | undefined {
   return ethereum || provider || undefined
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let provider: any
-
 // eslint-disable-next-line
 export default function () {
-  if (!provider) {
-    provider = getProvider()
+  const provider = getProvider()
+  if (provider === undefined || provider === null) {
+    throw new Error('Failed to find provider.')
   }
   return provider
 }

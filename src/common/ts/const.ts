@@ -7,13 +7,27 @@ export const CHAIN_ID_LIST = [CHAIN_ID]
 
 export const BSCSCAN_PRC_URL = process.env.VUE_APP_BSCSCAN_PRC_URL
 
-export const MASTER_CHEF_ADDRESS = '0x7910cce8C7918b6AFe57080b75c500EA9Cc5277C'
+export const MASTER_CHEF_ADDRESS = '0xe62bb7F26588628229b7f184C4eb84C2baff299D'
 
 export const MINING_TOKEN = new Token(
   ChainId.MAINNET,
-  '0x46446469f099817c19769878dcc89a812e187446',
+  '0xE3894CB9E92ca78524Fb6a30Ff072FA5E533c162',
   18,
-  'THOR'
+  'ELP'
+)
+
+export const USDT = new Token(
+  ChainId.MAINNET,
+  '0x55d398326f99059ff775485246999027b3197955',
+  18,
+  'USDT'
+)
+
+export const WRAPPED_BNB = new Token(
+  ChainId.MAINNET,
+  '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+  18,
+  'WBNB'
 )
 
 export const ZERO = JSBI.BigInt('0')
