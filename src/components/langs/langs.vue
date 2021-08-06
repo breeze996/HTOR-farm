@@ -45,7 +45,6 @@ export default defineComponent({
     return {
       LOCALES,
       current,
-
       toggle,
     }
   },

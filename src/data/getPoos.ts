@@ -4,8 +4,7 @@ import { TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
 import { getContract, isWrappedBNB } from '../common/ts/utils'
 import { PoolInfo, POOL_TYPE } from '../store/state-types'
 import { MASTER_CHEF_ADDRESS, ZERO, MINING_TOKEN } from '../common/ts/const'
-// import { abi as MasterChefAbi } from '../abi/MasterChef.json'
-import MasterChefAbi from '../abi/ELPDOTPOOL.json'
+import { abi as MasterChefAbi } from '../abi/MasterChef.json'
 import getToken from './getToken'
 import getCurrencysByLPToken from './getCurrencysByLPToken'
 
@@ -55,12 +54,10 @@ export async function getPoolInfo(poolId: number): Promise<PoolInfo | undefined>
     allocPoint: string
     pledgeTotalAmount: string
   }
-  console.log(pledgeTotalAmount)
   if (JSBI.equal(JSBI.BigInt(allocPoint), ZERO)) {
     return undefined
   }
-  //const isLPToken= poolType === POOL_TYPE.LP_TOKEN
-  const isLPToken = true
+  const isLPToken= poolType === POOL_TYPE.LP_TOKEN
   const token = await getToken(LPtoken)
   const currencys = await getCurrencysByLPToken(token)
 
@@ -70,7 +67,7 @@ export async function getPoolInfo(poolId: number): Promise<PoolInfo | undefined>
           isWrappedBNB(currencys[1]) ? 'BNB' : currencys[1].symbol
         }-LP`
       : token.symbol
-      ? token.symbol
+      ?isWrappedBNB(token) ? 'BNB':token.symbol
       : '-'
 
   return {
@@ -82,7 +79,6 @@ export async function getPoolInfo(poolId: number): Promise<PoolInfo | undefined>
     tokenSymbol,
     allocPoint: Number(allocPoint),
     miningToken: MINING_TOKEN,
-    poolStakedAmount: new TokenAmount(token, '100000000000000000000'),
-    // poolStakedAmount: new TokenAmount(token, pledgeTotalAmount),
+    poolStakedAmount: new TokenAmount(token, pledgeTotalAmount??'0'),
   }
 }

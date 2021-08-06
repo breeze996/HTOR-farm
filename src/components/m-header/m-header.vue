@@ -9,16 +9,33 @@
           {{ t('singleTokenMining') }}
         </div>
         <div class="nav" @click="scrollToControl('LPTokenMining')">{{ t('LPTokenMining') }}</div>
+        <div class="nav" @click="exchange">{{ t('exchange') }}</div>
+        <div class="nav" @click="addFluidity">{{ t('addFluidity') }}</div>
+        <div class="nav">{{ t('operatingTutorial') }}</div>
+        <div class="nav">{{ t('auditReport') }}</div>
       </div>
       <div class="connector">
         <div class="connect" v-if="!isConnected" @click="connect">{{ t('connect') }}</div>
         <div class="address" v-else @click="onAddressClick">{{ shortenAddress(account) }}</div>
       </div>
       <div class="langs-wrapper">
-        <langs />
+        <Langs />
       </div>
+      <img @click="open" class="menuIcon" src="./menuIcon.png" alt="" />
     </div>
   </header>
+  <el-drawer v-model="drawer" :direction="direction" :with-header="false" destroy-on-close>
+    <div class="na">
+      <div class="nav" @click="scrollToControl('singleTokenMining')">
+        {{ t('singleTokenMining') }}
+      </div>
+      <div class="nav" @click="scrollToControl('LPTokenMining')">{{ t('LPTokenMining') }}</div>
+      <div class="nav" @click="exchange">{{ t('exchange') }}</div>
+      <div class="nav" @click="addFluidity">{{ t('addFluidity') }}</div>
+      <div class="nav">{{ t('operatingTutorial') }}</div>
+      <div class="nav">{{ t('auditReport') }}</div>
+    </div>
+  </el-drawer>
 </template>
 
 <script lang="ts">
@@ -32,15 +49,26 @@ import { Dialog } from '../dialog/index'
 
 export default defineComponent({
   components: {
-    Langs,
+    Langs
   },
-  setup() {
+  data () {
+    return {
+      drawer: false,
+      direction: 'rtl'
+    }
+  },
+  methods: {
+    open () {
+      this.drawer = true
+    }
+  },
+  setup () {
     const store = useStore<State>()
     const { t, locale } = useI18n()
-
     const connect = () => {
       store.dispatch('handleConnect')
     }
+
     const onAddressClick = () => {
       Dialog({
         content: t('confirmDisconnect'),
@@ -48,34 +76,55 @@ export default defineComponent({
         cancelText: t('cancel'),
         cancel: true,
         confirm: true,
-        onConfirm() {
+        onConfirm () {
           store.dispatch('handleDisconnect')
-        },
+        }
       })
     }
     const scrollToControl = async (id: string) => {
       const { y } = getElementPosition(id)
       document.body.scrollTop = y ? y : 0
     }
-
+    const exchange = async () => {
+      window.location.href = 'https://pancakeswap.finance/swap'
+      console.log('exchange')
+    }
+    const addFluidity = async () => {
+      window.location.href = 'https://pancakeswap.finance/add'
+      console.log('exchange')
+    }
     return {
       account: computed(() => store.state.userInfo.account),
       isConnected: computed(() => store.getters.isConnected),
       locale,
-
       t,
       connect,
       shortenAddress,
       onAddressClick,
       scrollToControl,
+      exchange,
+      addFluidity
     }
-  },
+  }
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '../../scss/variable.scss';
 @import '../../scss/mixin.scss';
+
+.na {
+  height: 100%;
+  background-color: #203761;
+  padding-top: 30px;
+  // padding-left: 10px;
+  .nav {
+    color: #fff;
+    line-height: 30px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+}
 .header {
   position: absolute;
   z-index: 1;
@@ -84,16 +133,18 @@ export default defineComponent({
   top: 0;
   height: 100px;
   background: rgba($color: #15223b, $alpha: 0.52);
+  /deep/ .el-drawer {
+  }
   .content {
     display: flex;
     align-items: center;
     height: 100px;
-    max-width: 1200px;
+    max-width: 1250px;
     margin: 0 auto;
     .avatar {
       display: flex;
-      justify-content: center;
-      flex: 1;
+      // justify-content: center;
+      // flex: 1;
       img {
         width: 220px;
         height: 49px;
@@ -103,10 +154,11 @@ export default defineComponent({
       display: flex;
       flex: 1;
       margin-left: 50px;
+      margin-right: 50px;
+      justify-content: space-between;
+      cursor: pointer;
       .nav {
         display: flex;
-        flex: 1;
-        cursor: pointer;
       }
     }
     .connector {
@@ -131,23 +183,27 @@ export default defineComponent({
     .langs-wrapper {
       display: flex;
       justify-content: center;
-      padding: 0 20px 0 100px;
+      padding: 0 20px 0 50px;
     }
+  }
+  .menuIcon {
+    display: none;
   }
 }
 @include mobile {
   .header {
+    position: flex;
     height: 50px;
     background: rgba($color: #2b364a, $alpha: 0.52);
     .content {
       height: 50px;
       .avatar {
-        justify-content: flex-start;
-        padding-left: 15px;
         img {
           width: 110px;
           height: 25px;
         }
+        margin-left: 15px;
+        margin-right: 24px;
       }
       .navs {
         display: none;
@@ -160,9 +216,15 @@ export default defineComponent({
       .langs-wrapper {
         display: flex;
         justify-content: center;
-        padding: 0 15px 0 25px;
+        padding: 0 15px 0 20px;
         font-size: 12px;
-        font-weight: bold;
+        // font-weight: bold;
+      }
+      .menuIcon {
+        width: 22px;
+        height: 15.5px;
+        margin-left: 5px;
+        display: block;
       }
     }
   }

@@ -24,7 +24,6 @@ export default defineComponent({
   setup(props) {
     const { token } = toRefs(props)
     const src = ref<string>(`/imgs/${token.value?.address?.toLocaleLowerCase()}.png`)
-
     const onLoadError = () => {
       src.value = defaultPath
     }
@@ -41,6 +40,5 @@ export default defineComponent({
 <style lang="scss" scoped>
 .token-avatar {
   display: block;
-  border-radius: 50%;
 }
 </style>

@@ -1,19 +1,23 @@
 <template>
   <m-page class="bulletin-page">
-    <div class="title">公告</div>
-    <div class="content">哈哈哈哈哈哈哈哈哈哈哈哈</div>
+    <div class="title">{{ t('bulletin') }}</div>
+    <div class="content">{{ t('bulletinContent') }}</div>
   </m-page>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
 import MPage from '../../components/m-page/m-page.vue'
 export default defineComponent({
   components: {
     MPage,
   },
   setup() {
-    return {}
+    const { t } = useI18n()
+    return {
+      t
+    }
   },
 })
 </script>

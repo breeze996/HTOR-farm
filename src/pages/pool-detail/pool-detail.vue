@@ -5,7 +5,7 @@
         v-if="currentPool?.token"
         :token="currentPool?.token"
         :height="68"
-        :width="currentPool?.isLPToken ? 78 : 68"
+        :width="currentPool?.isLPToken ? 83 : 68"
       />
       <div class="name">{{ currentPool?.tokenSymbol ?? '-' }}</div>
     </div>
@@ -60,7 +60,7 @@
           class="token-avatar"
           :token="currentPool?.token ?? {}"
           :height="68"
-          :width="currentPool?.isLPToken ? 78 : 68"
+          :width="currentPool?.isLPToken ? 83 : 68"
         />
         <div class="balance">
           <span>{{ t('balance') }}</span> :
@@ -99,7 +99,7 @@
           class="token-avatar"
           :token="currentPool?.token ?? {}"
           :height="68"
-          :width="currentPool?.isLPToken ? 78 : 68"
+          :width="currentPool?.isLPToken ? 83 : 68"
         />
         <div class="staked">
           <span>{{ t('staked') }}</span> :

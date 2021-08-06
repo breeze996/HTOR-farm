@@ -28,13 +28,17 @@
       </div>
       <div class="bulletin" @click="toBulletin">
         <div class="left">
-          <img src="./speaker.png" />
-          <span>{{ t('bulletin') }}</span>
+          <div class="top">
+            <img src="./speaker.png" /> <span>{{ t('bulletin') }}</span>
+          </div>
+          <div class="bulletinContent">
+            {{ t('bulletinContent') }}
+          </div>
         </div>
-        <div class="right">
+        <!-- <div class="right">
           <span>{{ t('more') }}</span>
           <img src="./arrow-right.png" />
-        </div>
+        </div> -->
       </div>
     </div>
     <div class="bar" id="singleTokenMining">
@@ -82,7 +86,7 @@
       <div class="pool" v-for="(pool, index) in LPTokenPools" :key="index">
         <div class="token">
           <div class="name">{{ pool.tokenSymbol }}</div>
-          <token-avatar :token="pool.token" :height="55" :width="65" />
+          <token-avatar :token="pool.token" :height="55" :width="70" />
         </div>
         <div class="cells">
           <div class="cell">
@@ -129,9 +133,9 @@ import { MINING_TOKEN } from '@/common/ts/const'
 export default defineComponent({
   components: {
     TokenAvatar,
-    Loading,
+    Loading
   },
-  setup() {
+  setup () {
     const store = useStore<State>()
     const { t } = useI18n()
     const router = useProxyRouter()
@@ -140,10 +144,10 @@ export default defineComponent({
     const APYS = computed(() => store.state.APYS)
     const isConnected = computed<boolean>(() => store.getters.isConnected)
     const singleTokenPools = computed(() => {
-      return pools.value.filter((item) => !item.isLPToken)
+      return pools.value.filter(item => !item.isLPToken)
     })
     const LPTokenPools = computed(() => {
-      return pools.value.filter((item) => item.isLPToken)
+      return pools.value.filter(item => item.isLPToken)
     })
     const isLoadingPools = computed(() => store.state.isLoadingPools)
     const totalLockedPosition = computed(() => store.state.totalLockedPosition)
@@ -182,12 +186,11 @@ export default defineComponent({
       totalUserRevenueToday,
       APYS,
       MINING_TOKEN,
-
       toPoolDetail,
       toBulletin,
-      t,
+      t
     }
-  },
+  }
 })
 </script>
 
@@ -249,27 +252,29 @@ export default defineComponent({
       }
     }
     .bulletin {
-      display: flex;
-      justify-content: space-between;
+      box-sizing: border-box;
+      padding: 30px;
       align-items: center;
-      width: 200px;
-      padding: 0 35px;
-      height: 117px;
+      width: 469px;
+      // height: 154px;
       background: #283864;
       box-shadow: -3px 3px 5px #0a1430;
       border-radius: 31px;
       cursor: pointer;
       > div {
-        display: flex;
-        align-items: center;
       }
       .left {
-        font-size: 20px;
-        font-weight: bold;
-        img {
-          height: 42px;
-          width: 42px;
-          margin-right: 10px;
+        .top {
+          font-size: 20px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          margin-bottom: 30px;
+          img {
+            height: 42px;
+            width: 42px;
+            margin-right: 10px;
+          }
         }
       }
       .right {
@@ -414,17 +419,29 @@ export default defineComponent({
         }
       }
       .bulletin {
+        box-sizing: border-box;
+        width: 131px !important;
+        // height: 108px !important;
         border-radius: 15px;
         flex: 1;
         margin-left: 15px;
-        padding: 0 17px;
-        height: 58px;
+        padding: 15px 10px;
+        // height: 58px;
         .left {
-          font-size: 12px;
-          img {
-            height: 21px;
-            width: 21px;
-            margin-right: 5px;
+          .top {
+            margin: 0 auto;
+            font-size: 12px !important;
+            margin-bottom: 5px;
+            img {
+              height: 21px;
+              width: 21px;
+              margin-right: 5px;
+            }
+          }
+          .bulletinContent {
+            font-size: 12px !important;
+            // text-align: center;
+            line-height: 18px;
           }
         }
         .right {

@@ -42,12 +42,10 @@ export default defineComponent({
   setup(props: Props, { emit }) {
     const { modelValue, preventScroll, maskClosable, position, transition, hasMask, appendToBody } =
       toRefs(props)
-
     const isPopupShow = ref(false)
     const isPopupBoxShow = ref(false)
     const isAnimation = ref(false)
     const largeRadius = ref(false)
-
     const instanc = getCurrentInstance()
 
     onMounted(() => {
@@ -149,7 +147,6 @@ export default defineComponent({
       largeRadius,
       position,
       transition,
-
       handelPopupMaskClick,
       handelPopupTransitionStart,
       handelPopupTransitionEnd,

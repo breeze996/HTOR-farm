@@ -1,51 +1,86 @@
-import axios from 'axios'
-import { abi as MasterChefAbi } from '../abi/MasterChef.json'
-import { getContract } from '../common/ts/utils'
-import { MASTER_CHEF_ADDRESS, MINING_TOKEN } from '../common/ts/const'
-import { Token } from '@cointribute/pancakeswap-sdk-v2'
-import getNotAccountWeb3 from '../common/ts/getNotAccountWeb3'
-import { formatAmount } from '../common/ts/utils'
+import { MASTER_CHEF_ADDRESS, USDT } from '@/common/ts/const'
+import getNotAccountWeb3 from '@/common/ts/getNotAccountWeb3'
+import { getContract } from '@/common/ts/utils'
+import { PoolInfo } from '@/store/state-types'
+import { parseUnits, formatUnits } from '@ethersproject/units'
+import BigNumber from '../common/ts/bignumber'
+import getLPTokenPrice from './getLPTokenPrice'
+import { abi as MasterChefAbi } from '@/abi/MasterChef.json'
+import getTokenPrice from './getTokenPrice'
+import { TokenAmount } from '@cointribute/pancakeswap-sdk-v2'
 
-const keys = [
-  'GQVQGMKEJ5W5NUR6M3STT8UJKRAJ7S7GEZ',
-  'P5MYKB3WAHT2X447QZCEAV87RRV4BYMMMB',
-  'YUA2J37Q2P34V9UUNYIIE4AVF37FGUK2A3',
-]
-
-let keyIndex = 0
-
-export default async function getAPY(stakeToken: Token, poolPoint: number): Promise<string> {
-  const urls = {
-    token: `https://api.bscscan.com/api?module=account&action=tokenbalance&contractaddress=${MINING_TOKEN.address}&address=${stakeToken.address}&tag=latest&apikey=${keys[keyIndex]}`,
-    stakeToken: `https://api.bscscan.com/api?module=stats&action=tokenCsupply&contractaddress=${stakeToken.address}&apikey=${keys[keyIndex]}`,
-    staked: `https://api.bscscan.com/api?module=account&action=tokenbalance&contractaddress=${stakeToken.address}&address=${MASTER_CHEF_ADDRESS}&tag=latest&apikey=${keys[keyIndex]}`,
+export default async function (pool: PoolInfo, poolPoint: number): Promise<string> {
+  if (pool.isLPToken) {
+    return await getLPAPY(pool, poolPoint)
+  } else {
+    return await getTokenAPY(pool, poolPoint)
   }
-  keyIndex < keys.length - 1 ? keyIndex++ : (keyIndex = 0)
+}
 
+export async function getYearOutAmount(poolPoint: number) {
   const contract = getContract(MasterChefAbi, MASTER_CHEF_ADDRESS, getNotAccountWeb3())
-  const currentEpoch = await contract.methods.getCurrentEpoch().call()
-  try {
-    const [totalRevenue, tokenNumber, stakeTokenNumber, stakedNumber] = await Promise.all([
-      contract.methods.getEpochRewards(currentEpoch).call(),
-      axios.get(urls.token),
-      axios.get(urls.stakeToken),
-      axios.get(urls.staked),
-    ])
 
-    const formatdToken = formatAmount(tokenNumber.data.result)
-    const formatdStakeTokenNumber = formatAmount(stakeTokenNumber.data.result)
-    const formatdStakedNumber = formatAmount(stakedNumber.data.result)
-    const revenue = formatAmount(totalRevenue) * poolPoint
+  const firstDayReward = new BigNumber(895800.7407828433)
+  const curEpoch = await contract.methods.getCurrentEpoch().call()
+  const curDeflation = (await contract.methods.deflationRate_(curEpoch).call()) as string
+  const deflation = new BigNumber(curDeflation).div(1000000000000)
+  return firstDayReward.multipliedBy(deflation).multipliedBy(365).multipliedBy(poolPoint)
+}
 
-    if (!formatdStakedNumber) {
-      return '0'
-    }
-
-    const PLP = (formatdToken * 2) / formatdStakeTokenNumber
-    const APY = (((200 / PLP / formatdStakedNumber) * revenue) / 200) * 365 * 100
-
-    return APY.toFixed(2)
-  } catch (error) {
-    return '-'
+const getLPAPY = async (pool: PoolInfo, poolPoint: number) => {
+  const _totalFundAmount = await getLPTokenPrice(pool)
+  if (!_totalFundAmount) {
+    return '0'
   }
+  const lpTokenPrice = new BigNumber(_totalFundAmount.raw.toString()).div(
+    pool.poolStakedAmount.raw.toString()
+  )
+  const yearOutAmount = await getYearOutAmount(poolPoint)
+  const miningTokenPrice = await getTokenPrice(
+    [USDT, pool.miningToken],
+    new TokenAmount(pool.miningToken, parseUnits(yearOutAmount.toString()).toString())
+  )
+  if (!miningTokenPrice) {
+    return '0'
+  }
+  return _APY(
+    lpTokenPrice,
+    new BigNumber(formatUnits(miningTokenPrice?.raw.toString())),
+    new BigNumber(formatUnits(pool.poolStakedAmount.raw.toString()))
+  )
+}
+
+const getTokenAPY = async (pool: PoolInfo, poolPoint: number) => {
+  const [_totalFundAmount, yearOutAmount] = await Promise.all([
+    getTokenPrice([USDT, pool.token], pool.poolStakedAmount),
+    getYearOutAmount(poolPoint),
+  ])
+  if (!_totalFundAmount) {
+    return '0'
+  }
+  const tokenPrice = new BigNumber(_totalFundAmount.raw.toString()).div(
+    pool.poolStakedAmount.raw.toString()
+  )
+  const miningTokenPrice = await getTokenPrice(
+    [USDT, pool.miningToken],
+    new TokenAmount(pool.miningToken, parseUnits(yearOutAmount.toString()).toString())
+  )
+  if (!miningTokenPrice) {
+    return '0'
+  }
+  return _APY(
+    tokenPrice,
+    new BigNumber(formatUnits(miningTokenPrice?.raw.toString())),
+    new BigNumber(formatUnits(pool.poolStakedAmount.raw.toString()))
+  )
+}
+
+function _APY(
+  stakingTokenPrice: BigNumber,
+  totalRewardPricePerYear: BigNumber,
+  totalStaked: BigNumber
+): string {
+  const totalStakingTokenInPool = new BigNumber(stakingTokenPrice).times(totalStaked)
+  const apr = totalRewardPricePerYear.div(totalStakingTokenInPool).times(100)
+  return apr.isNaN() || !apr.isFinite() ? '0' : apr.toFixed(2)
 }

@@ -1,5 +1,9 @@
 {
+  "exchange":"兑换 THOR",
+  "addFluidity":"添加流动性",
   "singleTokenMining": "单币挖矿",
+  "operatingTutorial":"操作教程",
+  "auditReport":"审计报告",
   "singleTokenMiningArea": "单币挖矿区",
   "LPTokenMining": "LP挖矿",
   "LPTokenMiningArea": "LP挖矿区",
@@ -13,6 +17,7 @@
   "totalLockedPosition": "总锁仓量",
   "totalUserRevenueToday": "当日用户总收益",
   "bulletin": "公告",
+  "bulletinContent": "即将开放ETH, TRX, HECO 等多链，敬请期待... ",
   "more": "更多",
   "viewDetail": "查看详情",
   "APY": "年化收益",
